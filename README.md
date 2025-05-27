@@ -1,1 +1,0 @@
-# Doglegged_Staircase_Design

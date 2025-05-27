@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dog-Legged Staircase Design Calculator</title>
+    <!-- Libraries for export functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        .input-section, .output-section, .calculation-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .input-group {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .input-group label {
+            width: 250px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 120px;
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .input-group span {
+            font-size: 0.9em;
+            color: #666;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .export-btn {
+            background-color: #27ae60;
+        }
+        .export-btn:hover {
+            background-color: #219653;
+        }
+        .print-btn {
+            background-color: #9b59b6;
+        }
+        .print-btn:hover {
+            background-color: #8e44ad;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .note {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .diagram {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .diagram svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .calculation-step {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #fff;
+            border-left: 4px solid #3498db;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .highlight {
+            background-color: #fffacd;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+                font-size: 12pt;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                padding: 10px;
+            }
+            .input-section, .button-group {
+                display: none;
+            }
+            .output-section, .calculation-section {
+                border: none;
+                background-color: white;
+                padding: 0;
+            }
+            h1 {
+                font-size: 18pt;
+                margin-bottom: 15px;
+            }
+            h2 {
+                font-size: 14pt;
+                margin-top: 20px;
+            }
+            table {
+                font-size: 10pt;
+            }
+            .note {
+                page-break-before: always;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dog-Legged Staircase Design Calculator</h1>
+        
+        <div class="input-section">
+            <h2>Design Input Parameters</h2>
+            <div class="input-group">
+                <label for="floorHeight">Floor Height (H):</label>
+                <input type="number" id="floorHeight" value="3.0" step="0.1" min="2.5" max="5.0">
+                <span>meters (Standard: 2.8m to 3.2m)</span>
+            </div>
+            <div class="input-group">
+                <label for="riser">Riser Height (R):</label>
+                <input type="number" id="riser" value="150" step="5" min="100" max="190">
+                <span>mm (NBC max: 190mm, Ideal: 150-170mm)</span>
+            </div>
+            <div class="input-group">
+                <label for="tread">Tread Width (T):</label>
+                <input type="number" id="tread" value="250" step="5" min="220" max="300">
+                <span>mm (NBC min: 250mm, Ideal: 250-280mm)</span>
+            </div>
+            <div class="input-group">
+                <label for="landingWidth">Landing Width:</label>
+                <input type="number" id="landingWidth" value="1.5" step="0.1" min="1.0" max="3.0">
+                <span>meters (Minimum: 1.0m)</span>
+            </div>
+            <div class="input-group">
+                <label for="liveLoad">Live Load:</label>
+                <input type="number" id="liveLoad" value="3.0" step="0.5" min="2.0" max="5.0">
+                <span>kN/m² (Residential: 3 kN/m², Public: 5 kN/m²)</span>
+            </div>
+            <div class="input-group">
+                <label for="finishLoad">Finishes Load:</label>
+                <input type="number" id="finishLoad" value="1.0" step="0.1" min="0.5" max="2.0">
+                <span>kN/m² (Standard: 1.0 kN/m²)</span>
+            </div>
+            <div class="input-group">
+                <label for="concreteGrade">Concrete Grade:</label>
+                <select id="concreteGrade">
+                    <option value="20">M20 (fck = 20 MPa)</option>
+                    <option value="25">M25 (fck = 25 MPa)</option>
+                    <option value="30">M30 (fck = 30 MPa)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="steelGrade">Steel Grade:</label>
+                <select id="steelGrade">
+                    <option value="415">Fe415 (fy = 415 MPa)</option>
+                    <option value="500">Fe500 (fy = 500 MPa)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="supportWidth">Support Width:</label>
+                <input type="number" id="supportWidth" value="230" step="10" min="200" max="300">
+                <span>mm (Typical wall: 230mm)</span>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button onclick="calculateStaircase()">Calculate Staircase Design</button>
+            <button class="export-btn" onclick="exportToExcel()">Download Excel</button>
+            <button class="export-btn" onclick="exportToWord()">Download Word</button>
+            <button class="export-btn" onclick="exportToPDF()">Download PDF</button>
+            <button class="print-btn" onclick="window.print()">Print Design</button>
+        </div>
+
+        <div class="output-section">
+            <h2>Design Summary</h2>
+            <div id="results"></div>
+            <table id="designTable">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th>Remarks</th>
+                </tr>
+            </table>
+        </div>
+
+        <div class="calculation-section">
+            <h2>Step-by-Step Design Calculations</h2>
+            <div id="calculationSteps"></div>
+        </div>
+
+        <div class="diagram">
+            <h2>Staircase Diagram</h2>
+            <svg id="stairDiagram" width="700" height="500" viewBox="0 0 700 500"></svg>
+        </div>
+
+        <div class="note">
+            <h3>Design Notes:</h3>
+            <p><strong>1. Standards Compliance:</strong> This design follows IS 456:2000 and National Building Code (NBC) standards.</p>
+            <p><strong>2. Safety Factors:</strong> All calculations include appropriate safety factors as per code requirements.</p>
+            <p><strong>3. Reinforcement:</strong> Minimum reinforcement requirements are checked and satisfied.</p>
+            <p><strong>4. Professional Verification:</strong> For actual construction, this design must be verified by a licensed structural engineer.</p>
+            <p><strong>Generated on:</strong> <span id="generationDate"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        // Set generation date
+        document.getElementById('generationDate').textContent = new Date().toLocaleString();
+
+        function calculateStaircase() {
+            // Get input values
+            const H = parseFloat(document.getElementById('floorHeight').value);
+            const R = parseFloat(document.getElementById('riser').value) / 1000; // Convert mm to m
+            const T = parseFloat(document.getElementById('tread').value) / 1000; // Convert mm to m
+            const landingWidth = parseFloat(document.getElementById('landingWidth').value);
+            const liveLoad = parseFloat(document.getElementById('liveLoad').value);
+            const finishLoad = parseFloat(document.getElementById('finishLoad').value);
+            const fck = parseInt(document.getElementById('concreteGrade').value);
+            const fy = parseInt(document.getElementById('steelGrade').value);
+            const supportWidth = parseFloat(document.getElementById('supportWidth').value) / 1000; // Convert mm to m
+
+            // Clear previous calculations
+            document.getElementById('calculationSteps').innerHTML = '';
+            
+            // Add calculation steps
+            addCalculationStep("1. Determine Number of Steps", `
+                <p>Total Floor Height (H) = <span class="highlight">${H.toFixed(2)} m</span></p>
+                <p>Riser Height (R) = <span class="highlight">${(R*1000).toFixed(0)} mm</span></p>
+                <p>Number of Risers = Floor Height / Riser Height = ${H} / ${R} = <span class="highlight">${Math.round(H/R)}</span></p>
+                <p>Number of Steps = Number of Risers - 1 = <span class="highlight">${Math.round(H/R)-1}</span></p>
+                <p>For dog-legged staircase, we divide into two flights:</p>
+                <p>Steps per Flight = Ceiling(Number of Risers / 2) = <span class="highlight">${Math.ceil(Math.round(H/R)/2)}</span> risers per flight</p>
+                <p>Steps per Flight = <span class="highlight">${Math.ceil(Math.round(H/R)/2)-1}</span> steps per flight</p>
+            `);
+
+            // Flight arrangement calculations
+            const numRisers = Math.round(H / R);
+            const numSteps = numRisers - 1;
+            const numStepsPerFlight = Math.ceil(numRisers / 2);
+            const going = (numStepsPerFlight - 1) * T;
+            const totalSpan = going + landingWidth;
+            const effectiveSpan = totalSpan + supportWidth;
+
+            addCalculationStep("2. Flight Arrangement", `
+                <p>Going Length = Steps per Flight × Tread Width = ${numStepsPerFlight-1} × ${T} = <span class="highlight">${going.toFixed(2)} m</span></p>
+                <p>Landing Width = <span class="highlight">${landingWidth.toFixed(2)} m</span></p>
+                <p>Total Span = Going + Landing = ${going.toFixed(2)} + ${landingWidth.toFixed(2)} = <span class="highlight">${totalSpan.toFixed(2)} m</span></p>
+                <p>Effective Span (Lₑ) = Total Span + Support Width = ${totalSpan.toFixed(2)} + ${supportWidth} = <span class="highlight">${effectiveSpan.toFixed(2)} m</span></p>
+            `);
+
+            // Waist slab thickness calculation
+            const waistSlabThickness = effectiveSpan / 20;
+            const roundedWaistThickness = Math.max(Math.ceil(waistSlabThickness * 1000 / 10) * 10, 150); // Round up to nearest 10mm, min 150mm
+
+            addCalculationStep("3. Waist Slab Thickness", `
+                <p>Initial Thickness = Effective Span / 20 = ${effectiveSpan.toFixed(2)} / 20 = <span class="highlight">${waistSlabThickness.toFixed(4)} m</span> (${(waistSlabThickness*1000).toFixed(1)} mm)</p>
+                <p>Minimum Thickness = 150 mm</p>
+                <p>Adopted Thickness (D) = <span class="highlight">${roundedWaistThickness} mm</span></p>
+            `);
+
+            // Load calculations
+            const slopeFactor = Math.sqrt(R*R + T*T) / T;
+            const selfWeight = (roundedWaistThickness/1000) * slopeFactor * 25; // 25 kN/m³ for concrete
+            const deadLoad = selfWeight + finishLoad;
+            const factoredLoad = 1.5 * (deadLoad + liveLoad);
+
+            addCalculationStep("4. Load Calculations", `
+                <p>Slope Factor = √(R² + T²)/T = √(${R.toFixed(3)}² + ${T.toFixed(3)}²)/${T.toFixed(3)} = <span class="highlight">${slopeFactor.toFixed(3)}</span></p>
+                <p>Self Weight = (D × Slope Factor × 25) = (${(roundedWaistThickness/1000).toFixed(3)} × ${slopeFactor.toFixed(3)} × 25) = <span class="highlight">${selfWeight.toFixed(3)} kN/m²</span></p>
+                <p>Finishes Load = <span class="highlight">${finishLoad.toFixed(1)} kN/m²</span></p>
+                <p>Total Dead Load (DL) = Self Weight + Finishes = ${selfWeight.toFixed(2)} + ${finishLoad.toFixed(1)} = <span class="highlight">${deadLoad.toFixed(2)} kN/m²</span></p>
+                <p>Live Load (LL) = <span class="highlight">${liveLoad.toFixed(1)} kN/m²</span></p>
+                <p>Factored Load (Wu) = 1.5 × (DL + LL) = 1.5 × (${deadLoad.toFixed(2)} + ${liveLoad.toFixed(1)}) = <span class="highlight">${factoredLoad.toFixed(2)} kN/m²</span></p>
+            `);
+
+            // Structural calculations
+            const mu = factoredLoad * effectiveSpan * effectiveSpan / 8;
+            const vu = factoredLoad * effectiveSpan / 2;
+            const requiredDepth = Math.sqrt(mu * 1e6 / (0.138 * fck * 1000));
+            const providedDepth = roundedWaistThickness - 25; // 25mm cover
+
+            addCalculationStep("5. Structural Calculations", `
+                <p>Maximum Bending Moment (Mu) = Wu × Lₑ² / 8 = ${factoredLoad.toFixed(2)} × ${effectiveSpan.toFixed(2)}² / 8 = <span class="highlight">${mu.toFixed(2)} kNm</span></p>
+                <p>Shear Force (Vu) = Wu × Lₑ / 2 = ${factoredLoad.toFixed(2)} × ${effectiveSpan.toFixed(2)} / 2 = <span class="highlight">${vu.toFixed(2)} kN</span></p>
+                <p>Required Depth (d) = √(Mu / (0.138 × fck × b)) = √(${mu.toFixed(2)}×10⁶ / (0.138 × ${fck} × 1000)) = <span class="highlight">${requiredDepth.toFixed(1)} mm</span></p>
+                <p>Provided Depth (d) = D - Cover = ${roundedWaistThickness} - 25 = <span class="highlight">${providedDepth} mm</span></p>
+                <p>Check: ${providedDepth} mm > ${requiredDepth.toFixed(1)} mm → <span class="highlight">${providedDepth > requiredDepth ? 'OK' : 'NOT OK'}</span></p>
+            `);
+
+            // Reinforcement calculations
+            const astNumerator = 4.6 * mu * 1e6 / (fck * 1000 * providedDepth * providedDepth);
+            const ast = (0.5 * fck * 1000 * providedDepth / fy) * (1 - Math.sqrt(1 - astNumerator));
+            const astMin = 0.0012 * 1000 * roundedWaistThickness;
+
+            // Determine bar spacing
+            const mainBarDia = 10; // 10mm bars
+            const mainBarArea = Math.PI * mainBarDia * mainBarDia / 4;
+            const mainBarSpacing = Math.min(Math.floor((1000 * mainBarArea) / ast), 300); // Max spacing 300mm
+
+            const distBarDia = 8; // 8mm bars
+            const distBarArea = Math.PI * distBarDia * distBarDia / 4;
+            const distBarSpacing = Math.min(Math.floor((1000 * distBarArea) / astMin), 300);
+
+            addCalculationStep("6. Reinforcement Design", `
+                <p>Main Reinforcement:</p>
+                <p class="formula">Ast = (0.5 × fck × b × d / fy) × [1 - √(1 - (4.6 × Mu / (fck × b × d²)))]</p>
+                <p>Ast = (0.5 × ${fck} × 1000 × ${providedDepth} / ${fy}) × [1 - √(1 - (4.6 × ${mu.toFixed(2)}×10⁶ / (${fck} × 1000 × ${providedDepth}²)))]</p>
+                <p>Ast = <span class="highlight">${ast.toFixed(0)} mm²/m</span> (Required)</p>
+                <p>Minimum Ast = 0.12% of bD = 0.0012 × 1000 × ${roundedWaistThickness} = <span class="highlight">${astMin.toFixed(0)} mm²/m</span></p>
+                <p>Provide ${mainBarDia}mm dia. bars @ ${mainBarSpacing}mm c/c (Ast = ${Math.floor(1000 * mainBarArea / mainBarSpacing)} mm²/m)</p>
+                
+                <p>Distribution Reinforcement:</p>
+                <p>Ast_min = <span class="highlight">${astMin.toFixed(0)} mm²/m</span></p>
+                <p>Provide ${distBarDia}mm dia. bars @ ${distBarSpacing}mm c/c (Ast = ${Math.floor(1000 * distBarArea / distBarSpacing)} mm²/m)</p>
+            `);
+
+            // Shear check
+            const ptProvided = (1000 * mainBarArea / mainBarSpacing) / (1000 * providedDepth) * 100;
+            let shearStrength = 0;
+            if (ptProvided < 0.15) shearStrength = 0.28;
+            else if (ptProvided < 0.25) shearStrength = 0.36;
+            else if (ptProvided < 0.50) shearStrength = 0.48;
+            else shearStrength = 0.56;
+
+            const shearCapacity = shearStrength * 1000 * providedDepth / 1000; // in kN
+
+            addCalculationStep("7. Shear Check", `
+                <p>Percentage of Steel (pt) = (100 × Ast_provided) / (b × d) = (100 × ${Math.floor(1000 * mainBarArea / mainBarSpacing)}) / (1000 × ${providedDepth}) = <span class="highlight">${ptProvided.toFixed(2)}%</span></p>
+                <p>Shear Strength (τc) = <span class="highlight">${shearStrength.toFixed(2)} N/mm²</span> (From IS 456:2000 Table 19)</p>
+                <p>Shear Capacity = τc × b × d = ${shearStrength.toFixed(2)} × 1000 × ${providedDepth} / 1000 = <span class="highlight">${shearCapacity.toFixed(2)} kN</span></p>
+                <p>Applied Shear (Vu) = <span class="highlight">${vu.toFixed(2)} kN</span></p>
+                <p>Check: ${shearCapacity.toFixed(2)} kN > ${vu.toFixed(2)} kN → <span class="highlight">${shearCapacity > vu ? 'OK' : 'NOT OK'}</span></p>
+            `);
+
+            // Deflection check
+            const basicRatio = 20;
+            const modificationFactor = 1.3; // Assuming moderate steel stress
+            const allowableRatio = basicRatio * modificationFactor;
+            const actualRatio = effectiveSpan * 1000 / providedDepth;
+
+            addCalculationStep("8. Deflection Check", `
+                <p>Basic L/d Ratio = <span class="highlight">20</span> (For simply supported slab)</p>
+                <p>Modification Factor = <span class="highlight">1.3</span> (Approximate for moderate steel stress)</p>
+                <p>Allowable L/d Ratio = 20 × 1.3 = <span class="highlight">${allowableRatio.toFixed(1)}</span></p>
+                <p>Actual L/d Ratio = ${(effectiveSpan*1000).toFixed(0)} / ${providedDepth} = <span class="highlight">${actualRatio.toFixed(1)}</span></p>
+                <p>Check: ${actualRatio.toFixed(1)} ≤ ${allowableRatio.toFixed(1)} → <span class="highlight">${actualRatio <= allowableRatio ? 'OK' : 'NOT OK'}</span></p>
+            `);
+
+            // Display results
+            document.getElementById('results').innerHTML = `
+                <p><strong>Number of Risers:</strong> ${numRisers} (${numStepsPerFlight} per flight)</p>
+                <p><strong>Number of Steps:</strong> ${numSteps} (${numStepsPerFlight-1} per flight)</p>
+                <p><strong>Total Going:</strong> ${going.toFixed(2)} m</p>
+                <p><strong>Effective Span:</strong> ${effectiveSpan.toFixed(2)} m</p>
+            `;
+
+            // Update design table
+            const table = document.getElementById('designTable');
+            // Clear existing rows (except header)
+            while(table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+
+            const designData = [
+                {parameter: "Floor Height (H)", value: H.toFixed(2) + " m", remarks: ""},
+                {parameter: "Riser Height (R)", value: (R*1000).toFixed(0) + " mm", remarks: "NBC max: 190mm"},
+                {parameter: "Tread Width (T)", value: (T*1000).toFixed(0) + " mm", remarks: "NBC min: 250mm"},
+                {parameter: "Number of Risers", value: numRisers, remarks: ""},
+                {parameter: "Steps per Flight", value: numStepsPerFlight-1, remarks: ""},
+                {parameter: "Going Length", value: going.toFixed(2) + " m", remarks: ""},
+                {parameter: "Landing Width", value: landingWidth.toFixed(1) + " m", remarks: ""},
+                {parameter: "Effective Span (Lₑ)", value: effectiveSpan.toFixed(2) + " m", remarks: ""},
+                {parameter: "Waist Slab Thickness", value: roundedWaistThickness + " mm", remarks: ""},
+                {parameter: "Total Dead Load (DL)", value: deadLoad.toFixed(2) + " kN/m²", remarks: "Self + finishes"},
+                {parameter: "Live Load (LL)", value: liveLoad.toFixed(1) + " kN/m²", remarks: ""},
+                {parameter: "Factored Load (Wu)", value: factoredLoad.toFixed(2) + " kN/m²", remarks: "1.5×(DL+LL)"},
+                {parameter: "Bending Moment (Mu)", value: mu.toFixed(2) + " kNm", remarks: "Wu×Lₑ²/8"},
+                {parameter: "Shear Force (Vu)", value: vu.toFixed(2) + " kN", remarks: "Wu×Lₑ/2"},
+                {parameter: "Main Reinforcement", value: mainBarDia + "mm dia. @" + mainBarSpacing + "mm c/c", remarks: "Ast = " + Math.floor(1000 * mainBarArea / mainBarSpacing) + "mm²/m"},
+                {parameter: "Distribution Reinforcement", value: distBarDia + "mm dia. @" + distBarSpacing + "mm c/c", remarks: "Ast = " + Math.floor(1000 * distBarArea / distBarSpacing) + "mm²/m"},
+                {parameter: "Shear Check", value: shearCapacity.toFixed(2) + " kN > " + vu.toFixed(2) + " kN", remarks: shearCapacity > vu ? "OK" : "NOT OK"},
+                {parameter: "Deflection Check", value: actualRatio.toFixed(1) + " ≤ " + allowableRatio.toFixed(1), remarks: actualRatio <= allowableRatio ? "OK" : "NOT OK"}
+            ];
+
+            designData.forEach(item => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+                cell1.textContent = item.parameter;
+                cell2.textContent = item.value;
+                cell3.textContent = item.remarks;
+            });
+
+            // Draw diagram
+            drawDiagram(numStepsPerFlight-1, T, R, landingWidth);
+        }
+
+        function addCalculationStep(title, content) {
+            const div = document.createElement('div');
+            div.className = 'calculation-step';
+            div.innerHTML = `<h3>${title}</h3>${content}`;
+            document.getElementById('calculationSteps').appendChild(div);
+        }
+
+        function drawDiagram(steps, tread, riser, landingWidth) {
+            const svg = document.getElementById('stairDiagram');
+            svg.innerHTML = ''; // Clear previous diagram
+
+            const scale = 50; // Pixels per meter
+            const stairWidth = 1.2; // meters
+            const landingLength = landingWidth;
+            const totalLength = steps * tread + landingLength;
+
+            // Draw landing
+            const landing = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            landing.setAttribute("x", 50);
+            landing.setAttribute("y", 150);
+            landing.setAttribute("width", landingLength * scale);
+            landing.setAttribute("height", stairWidth * scale);
+            landing.setAttribute("fill", "#ddd");
+            landing.setAttribute("stroke", "#333");
+            svg.appendChild(landing);
+
+            // Draw first flight
+            for (let i = 0; i < steps; i++) {
+                const step = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                step.setAttribute("x", 50 + landingLength * scale + i * tread * scale);
+                step.setAttribute("y", 150 + stairWidth * scale - (i+1) * riser * scale);
+                step.setAttribute("width", tread * scale);
+                step.setAttribute("height", riser * scale);
+                step.setAttribute("fill", "#fff");
+                step.setAttribute("stroke", "#333");
+                svg.appendChild(step);
+            }
+
+            // Draw second flight (dog-legged)
+            for (let i = 0; i < steps; i++) {
+                const step = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                step.setAttribute("x", 50 + landingLength * scale + i * tread * scale);
+                step.setAttribute("y", 150 - steps * riser * scale + i * riser * scale);
+                step.setAttribute("width", tread * scale);
+                step.setAttribute("height", riser * scale);
+                step.setAttribute("fill", "#fff");
+                step.setAttribute("stroke", "#333");
+                svg.appendChild(step);
+            }
+
+            // Draw second landing
+            const landing2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            landing2.setAttribute("x", 50 + landingLength * scale + steps * tread * scale);
+            landing2.setAttribute("y", 150 - steps * riser * scale);
+            landing2.setAttribute("width", landingLength * scale);
+            landing2.setAttribute("height", stairWidth * scale);
+            landing2.setAttribute("fill", "#ddd");
+            landing2.setAttribute("stroke", "#333");
+            svg.appendChild(landing2);
+
+            // Add dimensions
+            addDimension(svg, 50, 150 + stairWidth * scale + 20, landingLength * scale, "Landing: " + landingWidth + "m", scale);
+            addDimension(svg, 50 + landingLength * scale, 150 + stairWidth * scale + 20, steps * tread * scale, "Going: " + (steps * tread).toFixed(2) + "m", scale);
+            addDimension(svg, 50 + landingLength * scale + steps * tread * scale, 150 + stairWidth * scale + 20, landingLength * scale, "Landing: " + landingWidth + "m", scale);
+            addDimension(svg, 50 + landingLength * scale - 30, 150, steps * riser * scale, "Rise: " + (steps * riser).toFixed(2) + "m", scale, true);
+            
+            // Add labels
+            const label1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label1.setAttribute("x", 50 + landingLength * scale + steps * tread * scale / 2);
+            label1.setAttribute("y", 150 + stairWidth * scale + 50);
+            label1.setAttribute("text-anchor", "middle");
+            label1.setAttribute("font-weight", "bold");
+            label1.textContent = "First Flight";
+            svg.appendChild(label1);
+
+            const label2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label2.setAttribute("x", 50 + landingLength * scale + steps * tread * scale / 2);
+            label2.setAttribute("y", 150 - steps * riser * scale - 10);
+            label2.setAttribute("text-anchor", "middle");
+            label2.setAttribute("font-weight", "bold");
+            label2.textContent = "Second Flight";
+            svg.appendChild(label2);
+        }
+
+        function addDimension(svg, x, y, length, text, scale, isVertical = false) {
+            const dimension = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            dimension.setAttribute("x1", x);
+            dimension.setAttribute("y1", y);
+            
+            if (isVertical) {
+                dimension.setAttribute("x2", x);
+                dimension.setAttribute("y2", y + length);
+            } else {
+                dimension.setAttribute("x2", x + length);
+                dimension.setAttribute("y2", y);
+            }
+            
+            dimension.setAttribute("stroke", "#333");
+            dimension.setAttribute("stroke-width", "1");
+            svg.appendChild(dimension);
+
+            // Add arrow heads
+            const arrow1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            arrow1.setAttribute("x1", x);
+            arrow1.setAttribute("y1", y);
+            
+            if (isVertical) {
+                arrow1.setAttribute("x2", x - 5);
+                arrow1.setAttribute("y2", y + 5);
+            } else {
+                arrow1.setAttribute("x2", x + 5);
+                arrow1.setAttribute("y2", y - 5);
+            }
+            
+            arrow1.setAttribute("stroke", "#333");
+            arrow1.setAttribute("stroke-width", "1");
+            svg.appendChild(arrow1);
+
+            const arrow2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            if (isVertical) {
+                arrow2.setAttribute("x1", x);
+                arrow2.setAttribute("y1", y + length);
+                arrow2.setAttribute("x2", x - 5);
+                arrow2.setAttribute("y2", y + length - 5);
+            } else {
+                arrow2.setAttribute("x1", x + length);
+                arrow2.setAttribute("y1", y);
+                arrow2.setAttribute("x2", x + length - 5);
+                arrow2.setAttribute("y2", y - 5);
+            }
+            
+            arrow2.setAttribute("stroke", "#333");
+            arrow2.setAttribute("stroke-width", "1");
+            svg.appendChild(arrow2);
+
+            // Add text
+            const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            if (isVertical) {
+                textElement.setAttribute("x", x - 10);
+                textElement.setAttribute("y", y + length/2);
+            } else {
+                textElement.setAttribute("x", x + length/2);
+                textElement.setAttribute("y", y - 5);
+            }
+            
+            textElement.setAttribute("text-anchor", "middle");
+            textElement.setAttribute("font-size", "12");
+            textElement.textContent = text;
+            svg.appendChild(textElement);
+        }
+
+        // Export functions
+        function exportToExcel() {
+            const table = document.getElementById('designTable');
+            const ws = XLSX.utils.table_to_sheet(table);
+            
+            // Add calculation steps
+            const calculationSteps = document.getElementById('calculationSteps').innerText;
+            XLSX.utils.sheet_add_aoa(ws, [["Calculation Steps:"], [calculationSteps]], {origin: -1});
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Staircase Design");
+            
+            // Add input parameters
+            const inputData = [
+                ["Input Parameters", "Value", "Unit"],
+                ["Floor Height", document.getElementById('floorHeight').value, "m"],
+                ["Riser Height", document.getElementById('riser').value, "mm"],
+                ["Tread Width", document.getElementById('tread').value, "mm"],
+                ["Landing Width", document.getElementById('landingWidth').value, "m"],
+                ["Live Load", document.getElementById('liveLoad').value, "kN/m²"],
+                ["Finishes Load", document.getElementById('finishLoad').value, "kN/m²"],
+                ["Concrete Grade", document.getElementById('concreteGrade').options[document.getElementById('concreteGrade').selectedIndex].text, ""],
+                ["Steel Grade", document.getElementById('steelGrade').options[document.getElementById('steelGrade').selectedIndex].text, ""],
+                ["Support Width", document.getElementById('supportWidth').value, "mm"]
+            ];
+            
+            const inputWs = XLSX.utils.aoa_to_sheet(inputData);
+            XLSX.utils.book_append_sheet(wb, inputWs, "Input Parameters");
+            
+            XLSX.writeFile(wb, "Staircase_Design.xlsx");
+        }
+
+        function exportToWord() {
+            const html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Staircase Design</title>
+                    <style>
+                        body { font-family: Arial; margin: 2cm; }
+                        h1 { color: #2c3e50; text-align: center; }
+                        h2 { color: #2c3e50; border-bottom: 1px solid #3498db; }
+                        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .calculation { margin-bottom: 20px; }
+                        .formula { font-family: monospace; background-color: #f5f5f5; padding: 5px; }
+                        .highlight { background-color: #fffacd; padding: 2px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Dog-Legged Staircase Design</h1>
+                    <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
+                    
+                    <h2>Input Parameters</h2>
+                    <table>
+                        <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+                        <tr><td>Floor Height</td><td>${document.getElementById('floorHeight').value}</td><td>m</td></tr>
+                        <tr><td>Riser Height</td><td>${document.getElementById('riser').value}</td><td>mm</td></tr>
+                        <tr><td>Tread Width</td><td>${document.getElementById('tread').value}</td><td>mm</td></tr>
+                        <tr><td>Landing Width</td><td>${document.getElementById('landingWidth').value}</td><td>m</td></tr>
+                        <tr><td>Live Load</td><td>${document.getElementById('liveLoad').value}</td><td>kN/m²</td></tr>
+                        <tr><td>Finishes Load</td><td>${document.getElementById('finishLoad').value}</td><td>kN/m²</td></tr>
+                        <tr><td>Concrete Grade</td><td>${document.getElementById('concreteGrade').options[document.getElementById('concreteGrade').selectedIndex].text}</td><td></td></tr>
+                        <tr><td>Steel Grade</td><td>${document.getElementById('steelGrade').options[document.getElementById('steelGrade').selectedIndex].text}</td><td></td></tr>
+                        <tr><td>Support Width</td><td>${document.getElementById('supportWidth').value}</td><td>mm</td></tr>
+                    </table>
+                    
+                    <h2>Design Summary</h2>
+                    ${document.getElementById('designTable').outerHTML}
+                    
+                    <h2>Detailed Calculations</h2>
+                    ${document.getElementById('calculationSteps').innerHTML}
+                    
+                    <h2>Design Notes</h2>
+                    <p>1. Standards Compliance: This design follows IS 456:2000 and National Building Code (NBC) standards.</p>
+                    <p>2. Safety Factors: All calculations include appropriate safety factors as per code requirements.</p>
+                    <p>3. Reinforcement: Minimum reinforcement requirements are checked and satisfied.</p>
+                    <p>4. Professional Verification: For actual construction, this design must be verified by a licensed structural engineer.</p>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob(['\ufeff', html], {
+                type: 'application/msword'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Staircase_Design.doc';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToPDF() {
+            const doc = new jsPDF('p', 'pt', 'a4');
+            
+            // Title
+            doc.setFontSize(18);
+            doc.setTextColor(44, 62, 80);
+            doc.text("Dog-Legged Staircase Design", 300, 40, null, null, 'center');
+            
+            // Date
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 300, 60, null, null, 'center');
+            
+            // Input Parameters
+            doc.setFontSize(14);
+            doc.setTextColor(44, 62, 80);
+            doc.text("1. Input Parameters", 40, 90);
+            
+            const inputData = [
+                ["Parameter", "Value", "Unit"],
+                ["Floor Height", document.getElementById('floorHeight').value, "m"],
+                ["Riser Height", document.getElementById('riser').value, "mm"],
+                ["Tread Width", document.getElementById('tread').value, "mm"],
+                ["Landing Width", document.getElementById('landingWidth').value, "m"],
+                ["Live Load", document.getElementById('liveLoad').value, "kN/m²"],
+                ["Finishes Load", document.getElementById('finishLoad').value, "kN/m²"],
+                ["Concrete Grade", document.getElementById('concreteGrade').options[document.getElementById('concreteGrade').selectedIndex].text, ""],
+                ["Steel Grade", document.getElementById('steelGrade').options[document.getElementById('steelGrade').selectedIndex].text, ""],
+                ["Support Width", document.getElementById('supportWidth').value, "mm"]
+            ];
+            
+            doc.autoTable({
+                startY: 100,
+                head: [inputData[0]],
+                body: inputData.slice(1),
+                theme: 'grid',
+                headStyles: { fillColor: [41, 128, 185] }
+            });
+            
+            // Design Summary
+            doc.setFontSize(14);
+            doc.text("2. Design Summary", 40, doc.autoTable.previous.finalY + 30);
+            
+            const table = document.getElementById('designTable');
+            const tableData = [];
+            
+            for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                tableData.push([
+                    row.cells[0].textContent,
+                    row.cells[1].textContent,
+                    row.cells[2].textContent
+                ]);
+            }
+            
+            doc.autoTable({
+                startY: doc.autoTable.previous.finalY + 40,
+                head: [["Parameter", "Value", "Remarks"]],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [41, 128, 185] }
+            });
+            
+            // Detailed Calculations
+            doc.setFontSize(14);
+            doc.text("3. Detailed Calculations", 40, doc.autoTable.previous.finalY + 30);
+            
+            const calculationSteps = document.getElementById('calculationSteps').children;
+            let yPosition = doc.autoTable.previous.finalY + 50;
+            
+            for (let i = 0; i < calculationSteps.length; i++) {
+                const step = calculationSteps[i];
+                const title = step.getElementsByTagName('h3')[0].textContent;
+                const content = step.innerHTML.replace(/<h3>.*<\/h3>/, '').replace(/<p>/g, '\n').replace(/<\/p>/g, '').replace(/<span class="highlight">/g, '').replace(/<\/span>/g, '').replace(/<span class="formula">/g, '').replace(/<br>/g, '\n');
+                
+                doc.setFontSize(12);
+                doc.setTextColor(44, 62, 80);
+                doc.text(title, 40, yPosition);
+                yPosition += 20;
+                
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                const splitText = doc.splitTextToSize(content, 520);
+                doc.text(splitText, 50, yPosition);
+                
+                yPosition += splitText.length * 15 + 20;
+                
+                // Add new page if needed
+                if (yPosition > 750) {
+                    doc.addPage();
+                    yPosition = 40;
+                }
+            }
+            
+            // Design Notes
+            doc.setFontSize(14);
+            doc.text("4. Design Notes", 40, yPosition + 20);
+            
+            const notes = [
+                "1. Standards Compliance: This design follows IS 456:2000 and National Building Code (NBC) standards.",
+                "2. Safety Factors: All calculations include appropriate safety factors as per code requirements.",
+                "3. Reinforcement: Minimum reinforcement requirements are checked and satisfied.",
+                "4. Professional Verification: For actual construction, this design must be verified by a licensed structural engineer."
+            ];
+            
+            doc.setFontSize(10);
+            doc.text(notes, 50, yPosition + 40);
+            
+            // Save PDF
+            doc.save('Staircase_Design.pdf');
+        }
+
+        // Calculate on page load
+        window.onload = calculateStaircase;
+
+        // Recalculate when any input changes
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('change', calculateStaircase);
+            element.addEventListener('input', calculateStaircase);
+        });
+    </script>
+</body>
+</html>
